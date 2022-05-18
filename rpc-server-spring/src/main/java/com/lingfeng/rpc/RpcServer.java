@@ -27,7 +27,10 @@ public class RpcServer {
 
     @PostConstruct
     public void init() {
-        BizNettyServer server = NettyServerFactory.buildBizNettyServer(new Address("127.0.0.1", 9999), () -> Arrays.asList(new NettyServerHandler()));
+        BizNettyServer server =
+                NettyServerFactory.buildBizNettyServer(
+                        new Address("127.0.0.1", 9999),
+                        () -> Arrays.asList(new NettyServerHandler()));
         server.start();
 
 
