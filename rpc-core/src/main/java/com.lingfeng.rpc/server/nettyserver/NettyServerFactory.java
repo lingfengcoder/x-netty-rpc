@@ -11,6 +11,7 @@ import com.lingfeng.rpc.server.handler.ServerHeartHandler;
 import com.lingfeng.rpc.server.handler.ServerIdleHandler;
 import com.lingfeng.rpc.server.listener.ServerReconnectFutureListener;
 import com.lingfeng.rpc.server.handler.BizServerHandler;
+import io.netty.channel.ChannelHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -38,7 +39,7 @@ public class NettyServerFactory {
         return buildBizNettyServer(address, () -> Collections.singletonList((new BizServerHandler())));
     }
 
-    public static <T> BizNettyServer buildBizNettyServer(Address address, Supplier<List<AbsServerHandler<T>>> func) {
+    public static <T> BizNettyServer buildBizNettyServer(Address address, Supplier<List<ChannelHandler>> func) {
         BizNettyServer server = new BizNettyServer();
         server.setAddress(address);
         server.config(_server -> {
@@ -56,8 +57,35 @@ public class NettyServerFactory {
                     .addListener(new ServerReconnectFutureListener());
             //添加业务处理器
             if (func != null) {
-                List<AbsServerHandler<T>> handlers = func.get();
-                for (AbsServerHandler<T> handler : handlers) {
+                List<ChannelHandler> handlers = func.get();
+                for (ChannelHandler handler : handlers) {
+                    _server.addHandler(handler);
+                }
+            }
+        });
+        return server;
+    }
+
+    //need @ChannelHandler.Sharable
+    public static <T> BizNettyServer buildBizNettyServer(Address address, ChannelHandler... channelHandlers) {
+        BizNettyServer server = new BizNettyServer();
+        server.setAddress(address);
+        server.config(_server -> {
+            log.info("====== _server accept ===== ");
+            CoderFactory coderFactory = CoderFactory.getInstance();
+            Coder generate = coderFactory.generate(SafeCoder.class);
+            _server
+                    .addHandler(generate.type())
+                    .addHandler(generate.decode())
+                    .addHandler(generate.encode())
+                    //.addHandler(ServerIdleHandler.getIdleHandler())
+                    //心跳处理器
+                    .addHandler(new ServerHeartHandler())
+                    //监听器
+                    .addListener(new ServerReconnectFutureListener());
+            //添加业务处理器
+            if (channelHandlers != null) {
+                for (ChannelHandler handler : channelHandlers) {
                     _server.addHandler(handler);
                 }
             }
@@ -78,7 +106,7 @@ public class NettyServerFactory {
 //                    .addHandler(generate.decode())
 //                    .addHandler(generate.encode());
 
-          //  _server.addHandler(ServerIdleHandler.getIdleHandler());
+            //  _server.addHandler(ServerIdleHandler.getIdleHandler());
             //心跳处理器
             //_server.addHandler(new ServerHeartHandler());
             //监听器
