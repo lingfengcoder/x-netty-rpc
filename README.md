@@ -7,7 +7,10 @@ a rpc framework which base on netty
 支持自定义协议，支持直接客户端运行或者集成spring运行，自定义处理器处理，简单易用
 
 在分布式下载组件中已经投入使用x-netty-rpc
-地址：
+gitee地址：
+https://gitee.com/lingfengx/x-downloader
+
+git地址：
 https://github.com/EditFly/x-downloader
 
 
