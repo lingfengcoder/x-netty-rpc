@@ -27,7 +27,6 @@ public class TestServer {
         server.start();
         while (server.state() != 1) {
         }
-
         while (server.state() == 1) {
 
             // server.showChannels();
