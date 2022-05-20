@@ -18,7 +18,6 @@
         <module>rpc-client-spring</module>
         <module>rpc-server-spring</module>
         <module>rpc-spring</module>
-        <module>demo</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

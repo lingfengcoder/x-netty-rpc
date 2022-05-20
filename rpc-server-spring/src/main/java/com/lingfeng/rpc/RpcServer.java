@@ -65,16 +65,6 @@ public class RpcServer {
     }
 
 
-    private void testStringByCTX(BizNettyServer server) {
-        ChannelHandlerContext defaultChannelContext = server.getDefaultChannelContext();
-        Frame<Object> frame = new Frame<>();
-        frame.setTarget("bbq");
-        frame.setData(" clientId = " + data.incrementAndGet());
-        if (defaultChannelContext != null) {
-            server.writeAndFlush(defaultChannelContext, frame, Cmd.REQUEST);
-        }
-    }
-
     private void testString(BizNettyServer server, Channel channel) {
         Frame<Object> frame = new Frame<>();
         frame.setTarget("bbq");

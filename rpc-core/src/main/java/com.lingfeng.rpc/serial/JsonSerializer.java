@@ -18,13 +18,11 @@ public class JsonSerializer implements ISerializer {
     @Override
     public <T> byte[] serialize(T obj) {
         return GsonTool.toJson(obj).getBytes(StandardCharsets.UTF_8);
-//        return null;//JSON.toJSONString(obj).getBytes();
     }
 
     @Override
     public <T> T deserialize(byte[] data, Class<T> clazz) {
         return GsonTool.fromJson(new String(data), clazz);
-//        return null;//JSON.parseObject(new String(data),clazz);
     }
 
     @Override

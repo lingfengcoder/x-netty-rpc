@@ -251,15 +251,4 @@ public abstract class AbsNettyServer implements NettyServer {
         return this;
     }
 
-    @Override
-    public void setDefaultChannelContext(ChannelHandlerContext channelContext) {
-        this.defaultContext = channelContext;
-    }
-
-    @Override
-    public ChannelHandlerContext getDefaultChannelContext() {
-        return this.defaultContext;
-    }
-
-
 }

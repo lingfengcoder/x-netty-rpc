@@ -12,4 +12,5 @@ public class SafeLengthFieldDecoder extends LengthFieldBasedFrameDecoder {
     public SafeLengthFieldDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
         super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip);
     }
+
 }
