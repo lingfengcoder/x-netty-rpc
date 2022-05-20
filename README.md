@@ -12,7 +12,7 @@ gitee地址：
 https://gitee.com/lingfengx/x-downloader
 
 git地址：
-https://github.com/EditFly/x-downloader
+https://github.com/lingfengcoder/x-downloader
 
 
 ## 自定义安全协议 SafeFrame
