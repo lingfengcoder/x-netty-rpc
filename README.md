@@ -2,9 +2,6 @@
 a rpc framework which base on netty 
 
 
-# x-netty-rpc
-a rpc framework which base on netty 
-
 基于netty的rpc框架
 
 支持自定义协议，支持直接客户端运行或者集成spring运行，自定义处理器处理，简单易用
