@@ -1,4 +1,4 @@
-package com.lingfeng.rpc;
+package com.lingfeng.rpc.demo;
 
 import com.lingfeng.rpc.client.nettyclient.BizNettyClient;
 import com.lingfeng.rpc.client.nettyclient.NettyClientFactory;
@@ -7,7 +7,6 @@ import com.lingfeng.rpc.constant.Cmd;
 import com.lingfeng.rpc.model.Address;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description:
  */
 @Slf4j
-public class TestClient {
+public class TestClient2 {
     public static void main(String[] args) throws InterruptedException {
 
 
@@ -49,9 +48,10 @@ public class TestClient {
                         break;
                     }
                     data = "[client1] bbq-" + tmp;
+
                     DataFrame<String> dataFrame = new DataFrame<>();
                     dataFrame.setData(data);
-                    // client1.writeAndFlush(dataFrame, Cmd.REQUEST);
+                    client1.writeAndFlush(dataFrame, Cmd.REQUEST);
                 } catch (Exception e) {
                     log.info("发送{} 失败", data);
                     //  log.error(e.getMessage(), e);
@@ -63,8 +63,7 @@ public class TestClient {
                     left.set(++tmp);
                 }
             }
-        });
-        //.start();
+        }).start();
 
 
         //TimeUnit.SECONDS.sleep(5);

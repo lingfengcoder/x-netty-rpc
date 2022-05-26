@@ -1,6 +1,5 @@
 package com.lingfeng.rpc.client.core;
 
-import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.extra.spring.SpringUtil;
 import com.lingfeng.rpc.client.handler.AbsClientHandler;
 import com.lingfeng.rpc.constant.Cmd;
@@ -9,7 +8,6 @@ import com.lingfeng.rpc.frame.SafeFrame;
 import com.lingfeng.rpc.invoke.RpcInvokeProxy;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Slf4j
@@ -17,6 +15,7 @@ public class NettyReqHandler extends AbsClientHandler<SafeFrame<Frame<?>>> {
 
     private volatile ThreadPoolTaskExecutor executor;
 
+    //线程池处理
     public ThreadPoolTaskExecutor getExecutor() {
         if (executor == null) {
             synchronized (this) {
@@ -47,7 +46,7 @@ public class NettyReqHandler extends AbsClientHandler<SafeFrame<Frame<?>>> {
             });
 
         } else {
-           // ctx.fireChannelRead(data);
+            // ctx.fireChannelRead(data);
         }
     }
 }
