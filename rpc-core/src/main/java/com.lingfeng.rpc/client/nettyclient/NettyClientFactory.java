@@ -35,7 +35,7 @@ public class NettyClientFactory {
         return buildBizNettyClient(address, () -> Collections.singletonList((new MyClientHandler())));
     }
 
-    public static <T> BizNettyClient buildBizNettyClient(Address address, Supplier<List<AbsClientHandler<T>>> func) {
+    public static <T> BizNettyClient buildBizNettyClient(Address address, Supplier<List<ChannelHandler>> func) {
         BizNettyClient client = new BizNettyClient();
         client.setAddress(address);
         //通过配置的方式，可以保证每次重启都获取新的handler对象 ,从而避免了@Sharable
@@ -56,8 +56,8 @@ public class NettyClientFactory {
                     .addListener(new ReConnectFutureListener());
             //添加业务处理器
             if (func != null) {
-                List<AbsClientHandler<T>> handlers = func.get();
-                for (AbsClientHandler<T> handler : handlers) {
+                List<ChannelHandler> handlers = func.get();
+                for (ChannelHandler handler : handlers) {
                     _client.addHandler(handler);
                 }
             }
