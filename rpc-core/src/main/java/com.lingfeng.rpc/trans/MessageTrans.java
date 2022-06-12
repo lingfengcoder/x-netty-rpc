@@ -53,7 +53,8 @@ public class MessageTrans {
                 //心跳
                 .setCmd(cmd.code())
                 //序列化方式
-                .setSerial(SerialType.JAVA_SERIAL.code())
+                //.setSerial(SerialType.JAVA_SERIAL.code())
+                .setSerial(SerialType.JSON_SERIAL.code())
                 //加密方式
                 .setEncrypt(DEFAULT_ENCRYPT)
                 //时间戳

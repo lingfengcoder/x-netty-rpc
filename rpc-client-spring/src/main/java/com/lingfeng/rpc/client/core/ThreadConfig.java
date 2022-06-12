@@ -17,9 +17,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ThreadConfig {
     @Bean
     //调度器发送线程池
-    public ThreadPoolTaskExecutor dispatcherThreadPool() {
+    public ThreadPoolTaskExecutor nettyClientThreadPool() {
         ThreadFactory factory = ThreadFactoryBuilder.create()
-                .setNamePrefix("##dispatcherThreadPool##").setDaemon(false)
+                .setNamePrefix("##nettyClientThreadPool##").setDaemon(false)
                 .build();
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setKeepAliveSeconds(60);
@@ -27,9 +27,10 @@ public class ThreadConfig {
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(20);
         executor.setQueueCapacity(50);
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
         executor.setAllowCoreThreadTimeOut(true);
         executor.initialize();
         return executor;
     }
+
 }

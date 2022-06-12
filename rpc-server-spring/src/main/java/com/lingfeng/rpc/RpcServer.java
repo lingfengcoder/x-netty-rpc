@@ -38,16 +38,16 @@ public class RpcServer {
             long now = SystemClock.now();
             while (true) {
                 try {
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 Collection<Channel> channels = server.allChannels();
                 if (!channels.isEmpty()) {
-                    // testStringByCTX(server);
+                     //testStringByCTX(server);
                 }
                 for (Channel channel : channels) {
-                    testString(server, channel);
+                    testComplex(server, channel);
                 }
             }
         }).start();

@@ -25,6 +25,7 @@ https://github.com/lingfengcoder/x-downloader
 
 自带时间戳 防重放攻击(timestamp) 
 
+后期考虑加入 Protobuf协议 和 Snappy压缩算法
 
 
 ```

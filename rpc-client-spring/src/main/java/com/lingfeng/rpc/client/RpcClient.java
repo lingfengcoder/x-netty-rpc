@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RpcClient {
 
 
-   // @PostConstruct
+   @PostConstruct
     public void init() {
 
         BizNettyClient client = NettyClientFactory.buildBizNettyClient(new Address("127.0.0.1", 9999),
@@ -38,7 +38,6 @@ public class RpcClient {
                 frame.setData("RPC Client data:" + i);
                 client.writeAndFlush(frame, Cmd.REQUEST);
             }
-        });
-        //.start();
+        }).start();
     }
 }

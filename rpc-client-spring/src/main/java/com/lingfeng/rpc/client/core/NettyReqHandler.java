@@ -20,7 +20,7 @@ public class NettyReqHandler extends AbsClientHandler<SafeFrame<Frame<?>>> {
         if (executor == null) {
             synchronized (this) {
                 if (executor == null) {
-                    executor = SpringUtil.getBean("dispatcherThreadPool");
+                    executor = SpringUtil.getBean("nettyClientThreadPool");
                 }
             }
         }
