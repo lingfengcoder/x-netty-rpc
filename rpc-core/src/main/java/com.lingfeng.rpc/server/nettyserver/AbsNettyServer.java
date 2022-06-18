@@ -181,24 +181,7 @@ public abstract class AbsNettyServer implements NettyServer {
 
 
     public <M extends Serializable> void writeAndFlush(ChannelHandlerContext ctx, M msg, Cmd type) {
-        Channel channel = ctx.channel();
-        if (!channel.isActive() && channel.isOpen()) {
-            throw new RuntimeException("[server] channel is not open or active！");
-        }
-        //如果channel没有注册好 则循环等待
-        accessClientState();
-        // log.info("ctx hashCode={} [write]", channel.hashCode());
-        switch (type) {
-            case HEARTBEAT:
-                ctx.writeAndFlush(MessageTrans.heartbeatFrame(getServerId()));
-                break;
-            case REQUEST:
-                ctx.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.REQUEST, getServerId()));
-                break;
-            case RESPONSE:
-                ctx.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.RESPONSE, getServerId()));
-                break;
-        }
+        writeAndFlush(ctx.channel(), msg, type);
     }
 
     public <M extends Serializable> void writeAndFlush(Channel channel, M msg, Cmd type) {
@@ -219,6 +202,9 @@ public abstract class AbsNettyServer implements NettyServer {
                 break;
             case RESPONSE:
                 channel.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.RESPONSE, getServerId()));
+                break;
+            case TEST:
+                channel.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.TEST, getServerId()));
                 break;
         }
     }

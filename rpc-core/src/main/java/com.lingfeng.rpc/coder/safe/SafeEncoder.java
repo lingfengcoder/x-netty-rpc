@@ -6,6 +6,7 @@ import com.lingfeng.rpc.serial.SerializerManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ import java.nio.charset.StandardCharsets;
  * @Date: 2022/5/10 14:54
  * @Description: 自定义消息编码器
  */
+@Slf4j
 public class SafeEncoder extends MessageToByteEncoder<SafeFrame<? extends Serializable>> {
 
     //   帧类型     //请求REQUEST((byte) 1), //返回RESPONSE((byte) 2), //心跳HEARTBEAT((byte) 3);
@@ -40,6 +42,8 @@ public class SafeEncoder extends MessageToByteEncoder<SafeFrame<? extends Serial
         Serializable content = safeFrame.getContent();
         ISerializer serializer = SerializerManager.getSerializer(safeFrame.getSerial());
         byte[] data = serializer.serialize(content); //序列化
+
+        log.info(" thread={} encode content={}", Thread.currentThread(), content);
 
         safeFrame.setLength(data.length);
         out.writeByte(safeFrame.getCmd());//1

@@ -1,7 +1,5 @@
 package com.lingfeng.rpc.invoke;
 
-
-import cn.hutool.core.util.ClassLoaderUtil;
 import com.lingfeng.rpc.ann.RpcComponent;
 import com.lingfeng.rpc.ann.RpcHandler;
 import com.lingfeng.rpc.data.AnnHandler;
@@ -74,7 +72,8 @@ public class RpcBeanRegister implements ApplicationContextAware, SmartInitializi
                     String name = rpcHandler.value();
                     //重名检测
                     if (annHandlers.containsKey(name)) {
-                        throw new RuntimeException("name= " + name + " handler already exist! please check name");
+                        AnnHandler annHandler = annHandlers.get(name);
+                        throw new RuntimeException("name= " + name + "class=" + bean.getClass() + " handler already exist! please check name" + " exit clazz=" + annHandler.getBean().getClass());
                     }
                     AnnHandler annHandler = new AnnHandler();
                     annHandler.setBean(bean);

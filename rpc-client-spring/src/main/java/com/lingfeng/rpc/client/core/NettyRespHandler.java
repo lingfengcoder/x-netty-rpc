@@ -18,7 +18,7 @@ public class NettyRespHandler extends AbsClientHandler<SafeFrame<Frame<?>>> {
             Frame<?> frame = data.getContent();
             String name = frame.getTarget();
             //代理执行方法
-            RpcInvokeProxy.invoke(ret -> {
+            RpcInvokeProxy.invoke(ctx.channel(), ret -> {
                 log.info("resp:{}", ret);
             }, name, frame.getData());
         } else {

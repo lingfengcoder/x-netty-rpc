@@ -53,8 +53,8 @@ public class MessageTrans {
                 //心跳
                 .setCmd(cmd.code())
                 //序列化方式
-                //.setSerial(SerialType.JAVA_SERIAL.code())
-                .setSerial(SerialType.JSON_SERIAL.code())
+                .setSerial(SerialType.JAVA_SERIAL.code())
+                //.setSerial(SerialType.JSON_SERIAL.code())
                 //加密方式
                 .setEncrypt(DEFAULT_ENCRYPT)
                 //时间戳
@@ -62,6 +62,7 @@ public class MessageTrans {
                 //客户端id
                 .setClient(clientId);
         safeFrame.setContent(data);
+        log.info("client send data={}", data);
         //签名
         safeFrame.setSign(Signature.sign(safeFrame));
         return safeFrame;

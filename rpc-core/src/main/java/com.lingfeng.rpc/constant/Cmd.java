@@ -15,7 +15,9 @@ public enum Cmd {
     //心跳
     HEARTBEAT((byte) 3),
     //认证
-    AUTH((byte) 4);
+    AUTH((byte) 4),
+    //测试
+    TEST((byte) 5);
 
 
     private final byte code;

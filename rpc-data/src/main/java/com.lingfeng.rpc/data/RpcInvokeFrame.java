@@ -10,7 +10,7 @@ import java.util.Map;
 @Setter
 @Getter
 @ToString
-public class RpcInvokeBean implements Serializable {
+public class RpcInvokeFrame implements Serializable {
 
     private String methodName;
 

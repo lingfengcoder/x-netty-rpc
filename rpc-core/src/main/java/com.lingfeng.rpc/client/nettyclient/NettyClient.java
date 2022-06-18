@@ -1,5 +1,6 @@
 package com.lingfeng.rpc.client.nettyclient;
 
+import com.lingfeng.rpc.base.Sender;
 import com.lingfeng.rpc.constant.Cmd;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -11,7 +12,7 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public interface NettyClient {
+public interface NettyClient extends Sender {
 
     int state();
 
@@ -25,9 +26,6 @@ public interface NettyClient {
 
     void defaultChannel(Channel channel);
 
-
-    <M extends Serializable> void writeAndFlush(Channel channel, M msg, Cmd type);
-
-    <M extends Serializable> void writeAndFlush(ChannelHandlerContext channel, M msg, Cmd type);
+    Channel getDefaultChannel();
 //     保留接口 <M extends Serializable> void writeAndFlush(M msg, Cmd type);
 }

@@ -3,6 +3,7 @@ package com.lingfeng.rpc.serial;
 
 import com.lingfeng.rpc.constant.SerialType;
 import com.lingfeng.rpc.util.GsonTool;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
  * @date 2022/5/7 14:53
  * @since 1.0.0
  */
+@Slf4j
 public class JsonSerializer implements ISerializer {
     @Override
     public <T> byte[] serialize(T obj) {
@@ -22,7 +24,9 @@ public class JsonSerializer implements ISerializer {
 
     @Override
     public <T> T deserialize(byte[] data, Class<T> clazz) {
-        return GsonTool.fromJson(new String(data), clazz);
+        String str = new String(data);
+        log.info("JsonSerializer deserialize={}", str);
+        return GsonTool.fromJson(str, clazz);
     }
 
     @Override

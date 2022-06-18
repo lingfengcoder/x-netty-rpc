@@ -38,7 +38,6 @@ public class HeartHandler extends AbsClientHandler<SafeFrame<String>> {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         NettyClient client = getClient();
         client.defaultChannel(ctx.channel());
-
         long clientId = client.getClientId();
         log.info("[netty client id: {}] 激活成功", clientId);
         super.channelActive(ctx);
