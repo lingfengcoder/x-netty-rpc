@@ -1,8 +1,9 @@
-package com.lingfeng.rpc.invoke;
+package com.lingfeng.rpc.proxy;
 
 import com.lingfeng.rpc.ann.RpcComponent;
 import com.lingfeng.rpc.ann.RpcHandler;
-import com.lingfeng.rpc.data.AnnHandler;
+import com.lingfeng.rpc.data.BeanHandler;
+import com.lingfeng.rpc.util.StringUtils;
 import com.lingfeng.rpc.util.relfect.ReflectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -14,21 +15,24 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * @RpcComponent 修饰的bean进行缓存并代理，在收到目标消息后，可以通过本类进行检索出目标方法
+ */
 @Slf4j
 @Component
-public class RpcBeanRegister implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
+public class RpcComponentRegister implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
 
 
     private static ApplicationContext applicationContext;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        RpcBeanRegister.applicationContext = applicationContext;
+        RpcComponentRegister.applicationContext = applicationContext;
     }
 
     public static ApplicationContext getApplicationContext() {
@@ -48,10 +52,10 @@ public class RpcBeanRegister implements ApplicationContextAware, SmartInitializi
     }
 
     //存放所有带注解的bean
-    private final static ConcurrentHashMap<String, AnnHandler> annHandlers = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String, BeanHandler> beanHandlerMap = new ConcurrentHashMap<>();
 
-    public static AnnHandler getHandler(String name) {
-        return annHandlers.get(name);
+    public static BeanHandler getHandler(String name) {
+        return beanHandlerMap.get(name);
     }
 
     private void annHandlerRegister(ApplicationContext applicationContext) {
@@ -63,27 +67,41 @@ public class RpcBeanRegister implements ApplicationContextAware, SmartInitializi
         Collection<Object> beans = beansMap.values();
         //找到rpc的method 和name
         for (Object bean : beans) {
+            RpcComponent[] annotations = bean.getClass().getAnnotationsByType(RpcComponent.class);
+            RpcComponent annotation = annotations[0];
+            String beanName = annotation.value();
+            if (StringUtils.isEmpty(beanName)) {
+                beanName = bean.getClass().getSimpleName();
+            }
+            //check
+            beanNameValidate(beanName);
+            BeanHandler beanHandler = new BeanHandler();
+            HashMap<String, Method> methodMap = new HashMap<>();
+            beanHandler.setBean(bean);
+            beanHandler.setBeanName(beanName);
+            beanHandler.setMethod(methodMap);
             //获取全部方法
             HashSet<Method> allMethod = ReflectUtils.getAllMethod(bean.getClass());
             for (Method method : allMethod) {
                 //获取方法上的注解
                 RpcHandler rpcHandler = method.getAnnotation(RpcHandler.class);
                 if (rpcHandler != null) {
-                    String name = rpcHandler.value();
-                    //重名检测
-                    if (annHandlers.containsKey(name)) {
-                        AnnHandler annHandler = annHandlers.get(name);
-                        throw new RuntimeException("name= " + name + "class=" + bean.getClass() + " handler already exist! please check name" + " exit clazz=" + annHandler.getBean().getClass());
+                    String methodName = rpcHandler.value();
+                    if (StringUtils.isEmpty(methodName)) {
+                        methodName = method.getName();
                     }
-                    AnnHandler annHandler = new AnnHandler();
-                    annHandler.setBean(bean);
-                    annHandler.setName(name);
-                    annHandler.setMethod(method);
-                    annHandlers.put(name, annHandler);
+                    methodMap.put(methodName, method);
                 }
             }
+            beanHandlerMap.put(beanName, beanHandler);
         }
     }
 
+    //判断缓存中是否已经包含了beanName(beanName是否重复)
+    private void beanNameValidate(String beanName) {
+        if (beanHandlerMap.containsKey(beanName)) {
+            throw new RuntimeException("@RpcComponent value=" + beanName + "的bean重复了!");
+        }
+    }
 
 }

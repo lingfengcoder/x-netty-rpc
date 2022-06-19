@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * @Auther: wz
  * @Date: 2022/6/16 09:34
- * @Description:
+ * @Description: JDK动态代理工具
  */
 @Setter
 @Slf4j
@@ -22,7 +22,7 @@ public class JdkDynamicProxyUtil {
 
         DemoFunction newProxyInstance = proxyInvoke(DemoFunction.class, (proxy, method, args1) -> {
             log.info("proxy={} method={} args={}", proxy, method, args1);
-            return null;
+            return "ddd yyds";
         });
 
         Map<String, String> map = new HashMap<>();
@@ -31,8 +31,12 @@ public class JdkDynamicProxyUtil {
         map.put("3", "333");
         Frame frame = new Frame();
         frame.setTarget("bbq target");
-        newProxyInstance.bbq(map, frame);
-        //动态代理
+        String bbq = newProxyInstance.bbq(map, frame);
+        System.out.println(bbq);
+    }
+
+    interface DemoFunction {
+        public String bbq(Map<String, String> map, Frame frame);
     }
 
     public static <T> T proxyInvoke(Class<T> clazz, InvocationHandler handler) {

@@ -1,17 +1,20 @@
 package com.lingfeng.rpc.invoke;
 
-import com.lingfeng.rpc.data.AnnHandler;
+import com.lingfeng.rpc.data.BeanHandler;
 import com.lingfeng.rpc.data.RpcInvokeFrame;
+import com.lingfeng.rpc.proxy.RpcComponentRegister;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 @Slf4j
+/**
+ * 目标方法反射执行类。用于在获取到 @RecClient 的消息后，通过反射寻找目标方法并执行
+ * 由于可能目标方法是线程池执行的，如果目标方法需要获取channel，需要提前通过 channelThreadLocal 进行设置
+ */
 public class RpcInvokeProxy {
 
     // 线程内置的channel
@@ -38,27 +41,32 @@ public class RpcInvokeProxy {
 
     private static Object invoke(Consumer<Object> postHandler, RpcInvokeFrame frame) {
         //从方法集中找到bean和method
-        AnnHandler handler = RpcBeanRegister.getHandler(frame.getMethodName());
+        String beanName = frame.getBeanName();
+        BeanHandler handler = RpcComponentRegister.getHandler(beanName);
         try {
             if (handler != null) {
                 //执行方法
                 Object bean = handler.getBean();
-                Method method = handler.getMethod();
-                Object result = null;
-                try {
-                    Object[] arguments = frame.getArguments();
-                    //不进行方法重载检查，因为在RpcBeanRegister里面不允许方法名称重复
-                    Class<?>[] methodParameterTypes = method.getParameterTypes();
-                    Class<?>[] frameParameterTypes = frame.getParameterTypes();
-                    result = method.invoke(bean, arguments);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    log.error(e.getMessage(), e);
-                }
-                if (postHandler != null) {
-                    postHandler.accept(result);
+                Method method = handler.getMethod().get(frame.getMethodName());
+                if (method != null) {
+                    Object result = null;
+                    try {
+                        Object[] arguments = frame.getArguments();
+                        //不进行方法重载检查，因为在RpcBeanRegister里面不允许方法名称重复
+                        Class<?>[] methodParameterTypes = method.getParameterTypes();
+                        Class<?>[] frameParameterTypes = frame.getParameterTypes();
+                        result = method.invoke(bean, arguments);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        log.error(e.getMessage(), e);
+                    }
+                    if (postHandler != null) {
+                        postHandler.accept(result);
+                    }
+                } else {
+                    log.error(beanName + "中没有找到 @RpcHandler(\"" + frame.getMethodName() + "\")的处理器");
                 }
             } else {
-                log.error("没有找到 @RpcHandler(\"" + frame.getMethodName() + "\")的处理器");
+                log.error("没有找到 @RpcComponent(\"" + beanName + "\")的bean");
             }
         } finally {
             //清理channel
@@ -67,57 +75,36 @@ public class RpcInvokeProxy {
         return null;
     }
 
-    public static Object invoke(Channel channel, Consumer<Object> postHandler, String name, Object... param) {
+    public static Object invoke(Channel channel, Consumer<Object> postHandler, String beanName, String methodName, Object... param) {
         if (channel != null) {
             setChannel(channel);
         }
-        return invoke(postHandler, name, param);
+        return invoke(postHandler, beanName, methodName, param);
     }
 
-    private static Object invoke(Consumer<Object> postHandler, String name, Object... param) {
+    private static Object invoke(Consumer<Object> postHandler, String beanName, String methodName, Object... param) {
         //从方法集中找到bean和method
-        AnnHandler handler = RpcBeanRegister.getHandler(name);
+        BeanHandler handler = RpcComponentRegister.getHandler(beanName);
         try {
             if (handler != null) {
                 //执行方法
                 Object bean = handler.getBean();
-                Method method = handler.getMethod();
-                Object result = null;
-                try {
-                    result = method.invoke(bean, param);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    log.error(e.getMessage(), e);
-                }
-                if (postHandler != null) {
-                    postHandler.accept(result);
+                Method method = handler.getMethod().get(methodName);
+                if (method != null) {
+                    Object result = null;
+                    try {
+                        result = method.invoke(bean, param);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        log.error(e.getMessage(), e);
+                    }
+                    if (postHandler != null) {
+                        postHandler.accept(result);
+                    }
+                } else {
+                    log.error(beanName + "中没有找到 @RpcHandler(\"" + methodName + "\")的处理器");
                 }
             } else {
-                log.error("没有找到 @RpcHandler(\"" + name + "\")的处理器");
-            }
-        } finally {
-            //清理channel
-            removeChannel();
-        }
-        return null;
-    }
-
-    private static Object invoke(String name, Object... param) {
-        try {
-            //从方法集中找到bean和method
-            AnnHandler handler = RpcBeanRegister.getHandler(name);
-            if (handler != null) {
-                //执行方法
-                Object bean = handler.getBean();
-                Method method = handler.getMethod();
-                Object result = null;
-                try {
-                    result = method.invoke(bean, param);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    log.error(e.getMessage(), e);
-                }
-                return result;
-            } else {
-                log.error("没有找到 @RpcHandler(\"" + name + "\")的处理器");
+                log.error("没有找到 @RpcComponent(\"" + beanName + "\")的bean");
             }
         } finally {
             //清理channel

@@ -25,7 +25,6 @@ public class JsonSerializer implements ISerializer {
     @Override
     public <T> T deserialize(byte[] data, Class<T> clazz) {
         String str = new String(data);
-        log.info("JsonSerializer deserialize={}", str);
         return GsonTool.fromJson(str, clazz);
     }
 

@@ -12,4 +12,5 @@ import java.io.Serializable;
 public class Frame<T> implements Serializable {
     private String target;
     private T data;
+    private String clientId;
 }

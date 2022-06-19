@@ -20,7 +20,7 @@ public class NettyRespHandler extends AbsClientHandler<SafeFrame<Frame<?>>> {
             //代理执行方法
             RpcInvokeProxy.invoke(ctx.channel(), ret -> {
                 log.info("resp:{}", ret);
-            }, name, frame.getData());
+            }, "beanName", "methodName", frame.getData());
         } else {
             // ctx.fireChannelRead(data);
         }

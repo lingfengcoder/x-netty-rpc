@@ -1,4 +1,4 @@
-package com.lingfeng.rpc.invoke;
+package com.lingfeng.rpc.proxy;
 
 import com.lingfeng.rpc.base.Sender;
 import com.lingfeng.rpc.constant.Cmd;
@@ -19,6 +19,6 @@ public class ProxySender {
     private Channel channel;
 
     public <M extends Serializable> void writeAndFlush(M msg) {
-        sender.writeAndFlush(channel, msg, Cmd.REQUEST);
+        sender.writeAndFlush(channel, msg, Cmd.RPC_REQ);
     }
 }

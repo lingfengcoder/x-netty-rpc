@@ -1,8 +1,10 @@
-package com.lingfeng.rpc.invoke;
+package com.lingfeng.rpc.proxy.handler;
 
 
-import com.lingfeng.rpc.client.nettyclient.BizNettyClient;
+import com.lingfeng.rpc.ann.RpcClient;
 import com.lingfeng.rpc.data.RpcInvokeFrame;
+import com.lingfeng.rpc.invoke.RemoteInvoke;
+import com.lingfeng.rpc.proxy.ProxySender;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -11,20 +13,28 @@ import java.lang.reflect.Method;
 /**
  * @Auther: wz
  * @Date: 2022/6/16 16:04
- * @Description:过程
+ * @Description:
  */
 @Slf4j
-public class RemoteProcess implements InvocationHandler {
+public class RpcClientProxyHandler implements InvocationHandler {
 
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (method.getName().equals("toString")) {
+            log.info("RemoteProcess invoke toString() method");
             return "RegisterAction no toString ";
         }
-        log.info("RemoteProcess proxy={} invoke method={} args={}", proxy, method.getName(), args);
-        log.info("RemoteProcess thread={}", Thread.currentThread());
+        Class<?> beanClass = method.getDeclaringClass();
+        RpcClient[] descRpcClients = beanClass.getAnnotationsByType(RpcClient.class);
+        RpcClient descRpcClient = descRpcClients[0];
+        //目标类
+        String value = descRpcClient.value();
+
+        log.info("RemoteProcess thread={} proxy={} invoke method={} args={}", Thread.currentThread(), proxy, method.getName(), args);
         RpcInvokeFrame req = new RpcInvokeFrame();
+        //bean名称
+        req.setBeanName(value);
         //目标方法名称
         req.setMethodName(method.getName());
         //参数

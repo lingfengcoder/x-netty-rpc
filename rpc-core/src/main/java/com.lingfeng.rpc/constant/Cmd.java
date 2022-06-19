@@ -17,7 +17,11 @@ public enum Cmd {
     //认证
     AUTH((byte) 4),
     //测试
-    TEST((byte) 5);
+    TEST((byte) 5),
+    //rpc请求
+    RPC_REQ((byte) 6),
+    //rpc返回
+    RPC_RESP((byte) 7);
 
 
     private final byte code;

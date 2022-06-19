@@ -43,8 +43,6 @@ public class SafeEncoder extends MessageToByteEncoder<SafeFrame<? extends Serial
         ISerializer serializer = SerializerManager.getSerializer(safeFrame.getSerial());
         byte[] data = serializer.serialize(content); //序列化
 
-        log.info(" thread={} encode content={}", Thread.currentThread(), content);
-
         safeFrame.setLength(data.length);
         out.writeByte(safeFrame.getCmd());//1
         out.writeByte(safeFrame.getSerial());//1

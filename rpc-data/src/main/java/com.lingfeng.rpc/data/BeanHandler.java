@@ -5,12 +5,14 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
 
 @Setter
 @Getter
 @ToString
-public class AnnHandler {
-    private String name;
-    private Method method;
+public class BeanHandler {
+    private String beanName;
+    private HashMap<String, Method> method;
     private Object bean;
 }

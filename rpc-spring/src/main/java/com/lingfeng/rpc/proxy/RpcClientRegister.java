@@ -1,4 +1,4 @@
-package com.lingfeng.rpc.invoke;
+package com.lingfeng.rpc.proxy;
 
 import com.lingfeng.rpc.ann.EnableRpcClient;
 import com.lingfeng.rpc.ann.RpcClient;
@@ -15,6 +15,7 @@ import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
@@ -30,12 +31,16 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
+/**
+ * @RpcClient 修饰的接口可以通过本类进行动态注册到springIOC容器中(本类参考了feign)
+ */
 @Slf4j
-public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
+@Order(5)
+public class RpcClientRegister implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
     private ResourceLoader resourceLoader;
     private Environment environment;
 
-    RpcDemoRegister() {
+    RpcClientRegister() {
         log.info("RpcDemoRegister ");
     }
 
@@ -47,65 +52,13 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
         Assert.isTrue(!clazz.isInterface(), "Fallback factory must produce instances of fallback classes that implement the interface annotated by @FeignClient");
     }
 
-    static String getName(String name) {
-        if (!StringUtils.hasText(name)) {
-            return "";
-        } else {
-            String host = null;
-
-            try {
-                String url;
-                if (!name.startsWith("http://") && !name.startsWith("https://")) {
-                    url = "http://" + name;
-                } else {
-                    url = name;
-                }
-
-                host = (new URI(url)).getHost();
-            } catch (URISyntaxException var3) {
-            }
-
-            Assert.state(host != null, "Service id not legal hostname (" + name + ")");
-            return name;
-        }
-    }
-
-    static String getUrl(String url) {
-        if (StringUtils.hasText(url) && (!url.startsWith("#{") || !url.contains("}"))) {
-            if (!url.contains("://")) {
-                url = "http://" + url;
-            }
-
-            try {
-                new URL(url);
-            } catch (MalformedURLException var2) {
-                throw new IllegalArgumentException(url + " is malformed", var2);
-            }
-        }
-
-        return url;
-    }
-
-    static String getPath(String path) {
-        if (StringUtils.hasText(path)) {
-            path = path.trim();
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-
-            if (path.endsWith("/")) {
-                path = path.substring(0, path.length() - 1);
-            }
-        }
-
-        return path;
-    }
 
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
 
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+
         this.registerDefaultConfiguration(metadata, registry);
         this.registerFeignClients(metadata, registry);
     }
@@ -119,14 +72,13 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
             } else {
                 name = "default." + metadata.getClassName();
             }
-
             this.registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
         }
 
     }
 
     public void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-        LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet();
+        LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
         Map<String, Object> attrs = metadata.getAnnotationAttributes(EnableRpcClient.class.getName());
         Class<?>[] clients = attrs == null ? null : (Class[]) ((Class[]) attrs.get("clients"));
         if (clients != null && clients.length != 0) {
@@ -142,6 +94,9 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
             scanner.setResourceLoader(this.resourceLoader);
             scanner.addIncludeFilter(new AnnotationTypeFilter(RpcClient.class));
             Set<String> basePackages = this.getBasePackages(metadata);
+            if (basePackages == null) {
+                return;
+            }
             Iterator<String> v8 = basePackages.iterator();
 
             while (v8.hasNext()) {
@@ -172,6 +127,7 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
 
     }
 
+    //核心方法，将bean
     private void registerRpcClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
         String className = annotationMetadata.getClassName();
         Class clazz = ClassUtils.resolveClassName(className, null);
@@ -180,13 +136,8 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
         String name = this.getName(attributes);
         RpcClientBeanFactory rpcClientBeanFactory = new RpcClientBeanFactory();
         rpcClientBeanFactory.setTargetClazz(clazz);
-        //动态代理生成
-        //Object proxyBean = JdkDynamicProxyUtil.proxyInvoke(clazz, new RemoteProcess());
-        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(clazz, () -> {
-            return rpcClientBeanFactory.getObject();
-            //  return JdkDynamicProxyUtil.proxyInvoke(clazz, new RemoteProcess());
-        });
-
+        //通过bean工厂的getObject方法获取 动态代理对象
+        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(clazz, () -> rpcClientBeanFactory.getObject());
         definition.setAutowireMode(2);
         definition.setLazyInit(true);
         this.validate(attributes);
@@ -202,6 +153,7 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
 
         BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, qualifiers);
         BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
+        //注册 可以通过contextId动态切换的bean
         this.registerOptionsBeanDefinition(registry, contextId);
     }
 
@@ -212,7 +164,7 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
     }
 
     String getName(Map<String, Object> attributes) {
-        return this.getName((ConfigurableBeanFactory) null, attributes);
+        return this.getName(null, attributes);
     }
 
     String getName(ConfigurableBeanFactory beanFactory, Map<String, Object> attributes) {
@@ -278,10 +230,15 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
 
     protected Set<String> getBasePackages(AnnotationMetadata importingClassMetadata) {
         Map<String, Object> attributes = importingClassMetadata.getAnnotationAttributes(EnableRpcClient.class.getCanonicalName());
+        if (attributes == null || attributes.isEmpty()) {
+            return null;
+        }
         Set<String> basePackages = new HashSet();
-        String[] values = (String[]) attributes.get("value");
+        String[] values = null;
+        if (attributes.get("value") != null) {
+            values = (String[]) attributes.get("value");
+        }
         int varLen = values.length;
-
         int i;
         String pkg;
         for (i = 0; i < varLen; ++i) {
@@ -364,6 +321,7 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
 
     //注册客户端对应的配置类
     private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name, Object configuration) {
+        log.info("registerClientConfiguration name={}", name);
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(RpcClientSpecification.class);
         builder.addConstructorArgValue(name);
         builder.addConstructorArgValue(configuration);
@@ -376,6 +334,7 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
 
     private void registerOptionsBeanDefinition(BeanDefinitionRegistry registry, String contextId) {
         if (this.isClientRefreshEnabled()) {
+            //可以动态刷新的bean
             String beanName = "";// Request.Options.class.getCanonicalName() + "-" + contextId;
 //            BeanDefinitionBuilder definitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(OptionsFactoryBean.class);
 //            definitionBuilder.setScope("refresh");
@@ -390,4 +349,59 @@ public class RpcDemoRegister implements ImportBeanDefinitionRegistrar, ResourceL
     private boolean isClientRefreshEnabled() {
         return (Boolean) this.environment.getProperty("feign.client.refresh-enabled", Boolean.class, false);
     }
+
+
+    static String getName(String name) {
+        if (!StringUtils.hasText(name)) {
+            return "";
+        } else {
+
+//           String host = null;
+//            try {//远程服务
+//                String url;
+//                if (!name.startsWith("http://") && !name.startsWith("https://")) {
+//                    url = "http://" + name;
+//                } else {
+//                    url = name;
+//                }
+//
+//                host = (new URI(url)).getHost();
+//            } catch (URISyntaxException var3) {
+//            }
+            //Assert.state(host != null, "Service id not legal hostname (" + name + ")");
+            return name;
+        }
+    }
+
+    static String getUrl(String url) {
+        if (StringUtils.hasText(url) && (!url.startsWith("#{") || !url.contains("}"))) {
+            if (!url.contains("://")) {
+                url = "http://" + url;
+            }
+
+            try {
+                new URL(url);
+            } catch (MalformedURLException var2) {
+                throw new IllegalArgumentException(url + " is malformed", var2);
+            }
+        }
+
+        return url;
+    }
+
+    static String getPath(String path) {
+        if (StringUtils.hasText(path)) {
+            path = path.trim();
+            if (!path.startsWith("/")) {
+                path = "/" + path;
+            }
+
+            if (path.endsWith("/")) {
+                path = path.substring(0, path.length() - 1);
+            }
+        }
+
+        return path;
+    }
+
 }

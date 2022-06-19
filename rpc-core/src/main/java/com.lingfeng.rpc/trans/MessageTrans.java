@@ -62,7 +62,7 @@ public class MessageTrans {
                 //客户端id
                 .setClient(clientId);
         safeFrame.setContent(data);
-        log.info("client send data={}", data);
+        // log.info("client send data={}", data);
         //签名
         safeFrame.setSign(Signature.sign(safeFrame));
         return safeFrame;

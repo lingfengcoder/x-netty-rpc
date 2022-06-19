@@ -2,6 +2,7 @@ package com.lingfeng.rpc.serial;
 
 
 import com.lingfeng.rpc.constant.SerialType;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 
@@ -13,6 +14,7 @@ import java.io.*;
  * @date 2022/5/7 14:53
  * @since 1.0.0
  */
+@Slf4j
 public class JavaSerializer implements ISerializer {
 
     @Override

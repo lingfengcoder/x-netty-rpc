@@ -164,19 +164,10 @@ public abstract class AbsNettyClient implements NettyClient {
         //如果channel没有注册好 则循环等待
         accessClientState();
         //  log.info("ctx hashCode={} [write]", channel.hashCode());
-        switch (type) {
-            case HEARTBEAT:
-                channel.writeAndFlush(MessageTrans.heartbeatFrame(getClientId()));
-                break;
-            case REQUEST:
-                channel.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.REQUEST, getClientId()));
-                break;
-            case RESPONSE:
-                channel.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.RESPONSE, getClientId()));
-                break;
-            case TEST:
-                channel.writeAndFlush(MessageTrans.dataFrame(msg, Cmd.TEST, getClientId()));
-                break;
+        if (type == Cmd.HEARTBEAT) {
+            channel.writeAndFlush(MessageTrans.heartbeatFrame(getClientId()));
+        } else {
+            channel.writeAndFlush(MessageTrans.dataFrame(msg, type, getClientId()));
         }
     }
 

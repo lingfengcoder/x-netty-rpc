@@ -1,8 +1,7 @@
 package com.lingfeng.rpc.ann;
 
-import com.lingfeng.rpc.invoke.RpcDemoRegister;
+import com.lingfeng.rpc.proxy.RpcClientRegister;
 import org.springframework.context.annotation.Import;
-import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
 
@@ -14,7 +13,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 @Documented
-@Import({RpcDemoRegister.class})
+@Import({RpcClientRegister.class})
 public @interface EnableRpcClient {
     String[] value() default {};
 

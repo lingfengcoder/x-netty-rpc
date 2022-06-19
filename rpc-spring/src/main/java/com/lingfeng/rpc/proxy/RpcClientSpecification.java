@@ -1,9 +1,12 @@
-package com.lingfeng.rpc.invoke;
+package com.lingfeng.rpc.proxy;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class RpcClientSpecification   {
+/**
+ * rpc-client 用于不同环境进行装配的规格类
+ */
+public class RpcClientSpecification {
     private String name;
     private Class<?>[] configuration;
 
@@ -35,7 +38,7 @@ public class RpcClientSpecification   {
         if (this == o) {
             return true;
         } else if (o != null && this.getClass() == o.getClass()) {
-            RpcClientSpecification that = (RpcClientSpecification)o;
+            RpcClientSpecification that = (RpcClientSpecification) o;
             return Objects.equals(this.name, that.name) && Arrays.equals(this.configuration, that.configuration);
         } else {
             return false;
@@ -47,6 +50,6 @@ public class RpcClientSpecification   {
     }
 
     public String toString() {
-        return "FeignClientSpecification{" + "name='" + this.name + "', " + "configuration=" + Arrays.toString(this.configuration) + "}";
+        return "RpcClientSpecification{" + "name='" + this.name + "', " + "configuration=" + Arrays.toString(this.configuration) + "}";
     }
 }
