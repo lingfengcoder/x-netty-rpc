@@ -20,7 +20,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class SpringClientProxyInvokeHandler extends AbsClientHandler<SafeFrame<RpcInvokeFrame>> {
+public class SpringClientProxyInvokeHandler extends AbsClientHandler<SafeFrame<Object>> {
 
     private ThreadPoolTaskExecutor executeThreadPool;
 
@@ -50,7 +50,7 @@ public class SpringClientProxyInvokeHandler extends AbsClientHandler<SafeFrame<R
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, SafeFrame<RpcInvokeFrame> data) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, SafeFrame<Object> data) {
         byte cmd = data.getCmd();
         if (cmd == Cmd.TEST.code()) {
             log.debug("[ClientProxyInvokeHandler]channelRead0 receive string msg={}", data.getContent());
@@ -58,22 +58,10 @@ public class SpringClientProxyInvokeHandler extends AbsClientHandler<SafeFrame<R
         }
         //处理rpc请求
         if (cmd == Cmd.RPC_REQ.code()) {
-            log.debug("[ClientProxyInvokeHandler] channelRead0 receive RpcInvokeFrame={}", data);
-            RpcInvokeFrame frame = data.getContent();
-            //线程池执行
-            // BasicFrameHandler handler = BasicFrameHandler.builder().channel(ctx.channel()).frame(frame).build();
-            Channel channel = ctx.channel();
-            executeThreadPool.execute(() -> {
-                String channelId = channel.id().asLongText();
-                log.info(" [ClientProxyInvokeHandler] channel={}", channelId);
-                RpcInvokeProxy.invoke(channel, ret -> {
-                    //返回数据
-                    Frame<Object> fame = new Frame<>();
-                    fame.setData(ret);
-                    fame.setClientId(channelId);
-                    writeAndFlush(channel, fame, Cmd.RPC_RESP);
-                }, frame);
-            });
+            NettyClient client = getClient();
+            RpcConsumer.rpcRequestHandler(ctx, data, executeThreadPool, client);
+        } else if (cmd == Cmd.RPC_RESP.code()) {
+            RpcProvider.rpcResponseHandler(ctx, data);
             //转交消息
         } else ctx.fireChannelRead(data);
     }

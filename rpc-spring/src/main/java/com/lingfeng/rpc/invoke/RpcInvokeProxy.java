@@ -20,6 +20,7 @@ public class RpcInvokeProxy {
     // 线程内置的channel
     private static final ThreadLocal<Channel> channelThreadLocal = new ThreadLocal<>();
 
+
     public static void setChannel(Channel channel) {
         channelThreadLocal.set(channel);
     }
@@ -35,6 +36,10 @@ public class RpcInvokeProxy {
     public static Object invoke(Channel channel, Consumer<Object> postHandler, RpcInvokeFrame frame) {
         if (channel != null) {
             setChannel(channel);
+        }
+        //异步模式，切回调坐标不为空
+        if (!frame.isSync() && frame.getRetPosition() != null) {
+            CallbackPosition.setCallbackPosition(frame.getRetPosition());
         }
         return invoke(postHandler, frame);
     }
@@ -71,6 +76,7 @@ public class RpcInvokeProxy {
         } finally {
             //清理channel
             removeChannel();
+            CallbackPosition.removeCallbackPosition();
         }
         return null;
     }
@@ -109,6 +115,7 @@ public class RpcInvokeProxy {
         } finally {
             //清理channel
             removeChannel();
+            CallbackPosition.removeCallbackPosition();
         }
         return null;
     }

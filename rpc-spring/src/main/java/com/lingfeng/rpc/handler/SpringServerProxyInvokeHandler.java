@@ -3,14 +3,20 @@ package com.lingfeng.rpc.handler;
 import com.lingfeng.rpc.constant.Cmd;
 import com.lingfeng.rpc.data.Frame;
 import com.lingfeng.rpc.data.RpcInvokeFrame;
+import com.lingfeng.rpc.data.RpcRespFrame;
+import com.lingfeng.rpc.data.Snotify;
 import com.lingfeng.rpc.frame.SafeFrame;
 import com.lingfeng.rpc.invoke.RpcInvokeProxy;
 import com.lingfeng.rpc.server.handler.AbsServerHandler;
+import com.lingfeng.rpc.server.nettyserver.NettyServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 
 /**
@@ -18,7 +24,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class SpringServerProxyInvokeHandler extends AbsServerHandler<SafeFrame<RpcInvokeFrame>> {
+public class SpringServerProxyInvokeHandler extends AbsServerHandler<SafeFrame<Object>> {
 
     private ThreadPoolTaskExecutor executeThreadPool;
 
@@ -44,36 +50,20 @@ public class SpringServerProxyInvokeHandler extends AbsServerHandler<SafeFrame<R
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, SafeFrame<RpcInvokeFrame> data) throws Exception {
-
+    protected void channelRead0(ChannelHandlerContext ctx, SafeFrame<Object> data) {
         byte cmd = data.getCmd();
         if (cmd == Cmd.TEST.code()) {
             log.info("channelRead0 receive string msg={}", data.getContent());
             return;
         }
-        // request 主要处理client的请求，比如 客户端主动请求获取最新的配置 客户端注册
         //处理RPC请求
         if (cmd == Cmd.RPC_REQ.code()) {
-            log.info("channelRead0 receive RpcInvokeFrame={}", data);
-            RpcInvokeFrame frame = data.getContent();
-            Channel channel = ctx.channel();
-            //线程池执行
-            executeThreadPool.execute(() -> {
-                String channelId = channel.id().asLongText();
-                log.info("channel={}", channelId);
-                RpcInvokeProxy.invoke(channel, ret -> {
-                    // FinishNotify finishNotify;
-                    // finishNotify.finish(666,"666");
-                    //返回数据
-                    Frame<Object> fame = new Frame<>();
-                    fame.setData(ret);
-                    fame.setClientId(channelId);
-                    writeAndFlush(channel, fame, Cmd.RPC_RESP);
-                }, frame);
-            });
+            NettyServer server = getServer();
+            RpcConsumer.rpcRequestHandler(ctx, data, executeThreadPool, server);
+        } else if (cmd == Cmd.RPC_RESP.code()) {
+            RpcProvider.rpcResponseHandler(ctx, data);
             //转交消息
         } else ctx.fireChannelRead(data);
     }
-
 
 }

@@ -2,6 +2,7 @@ package com.lingfeng.rpc.invoke;
 
 import cn.hutool.extra.spring.SpringUtil;
 import com.lingfeng.rpc.base.Sender;
+import com.lingfeng.rpc.data.RpcInvokeFrame;
 import com.lingfeng.rpc.proxy.JdkDynamicProxyUtil;
 import com.lingfeng.rpc.proxy.ProxySender;
 import com.lingfeng.rpc.proxy.handler.RpcClientProxyHandler;
@@ -22,8 +23,14 @@ import java.util.function.Supplier;
 public class RemoteInvoke {
     private boolean useDefaultProvider = false;
     private Supplier<ProxySender> provider;
+    //发送端
     private final ThreadLocal<ProxySender> senderThreadLocal = new ThreadLocal<>();
+
     private final static RemoteInvoke instance = new RemoteInvoke();
+
+    //匿名
+    private RemoteInvoke() {
+    }
 
     public static RemoteInvoke getInstance() {
         return instance;
@@ -43,6 +50,9 @@ public class RemoteInvoke {
         return instance;
     }
 
+    public void setCallback(RpcInvokeFrame frame) {
+        CallbackPosition.setCallbackPosition(frame);
+    }
 
     public ProxySender getSender() {
         ProxySender proxySender = senderThreadLocal.get();
@@ -69,6 +79,10 @@ public class RemoteInvoke {
 
     public <T> T getBean(Class<T> clazz) {
         return SpringUtil.getBean(clazz);
+    }
+
+    public <T> T getBean(String beanName) {
+        return SpringUtil.getBean(beanName);
     }
 
 }
