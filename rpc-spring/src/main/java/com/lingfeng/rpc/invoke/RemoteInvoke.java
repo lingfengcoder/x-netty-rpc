@@ -24,6 +24,7 @@ public class RemoteInvoke {
     private boolean useDefaultProvider = false;
     private Supplier<ProxySender> provider;
     //发送端
+    //note 没有清理SenderThreadLocal的地方
     private final ThreadLocal<ProxySender> senderThreadLocal = new ThreadLocal<>();
 
     private final static RemoteInvoke instance = new RemoteInvoke();
@@ -37,6 +38,7 @@ public class RemoteInvoke {
     }
 
     public static RemoteInvoke getInstance(Sender sender, Channel channel) {
+        // 将发送的接口和需要发送的管道 和线程绑定（threadLocal）
         if (channel != null) {
             instance.setThreadLocalSender(ProxySender.builder().sender(sender).channel(channel).build());
         }
@@ -81,6 +83,7 @@ public class RemoteInvoke {
         return SpringUtil.getBean(clazz);
     }
 
+    //从springIOC容器中获取bean
     public <T> T getBean(String beanName) {
         return SpringUtil.getBean(beanName);
     }

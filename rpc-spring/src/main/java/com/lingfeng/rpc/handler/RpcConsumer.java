@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 @Slf4j
 public class RpcConsumer {
     public static Object waitFor(String seq, Object lock, long timeout) throws InterruptedException {
+        //加入等待队列
         RpcStore.offer(seq, new Snotify().setSeq(seq).setLock(lock).setTimeout(timeout));
         synchronized (lock) {
             if (timeout > 0) {
@@ -57,16 +58,16 @@ public class RpcConsumer {
         //线程池执行
         executeThreadPool.execute(() -> RpcInvokeProxy.invoke(channel, result -> {
             if (sync) {
-                //同步处理
+                //方法执行结果，同步处理
                 syncHandler(result, seq, sender, channel);
             } else {
-                //异步处理
+                //方法执行结果，异步处理
                 asyncHandler(result, retPosition, sender, channel);
             }
         }, frame));
     }
 
-    //同步模式处理
+    //同步模式处理:将结果直接发送回去
     private static void syncHandler(Object result, String seq, Sender sender, Channel channel) {
         String channelId = channel.id().asLongText();
         log.info("channel={}", channelId);
@@ -80,7 +81,8 @@ public class RpcConsumer {
         sender.writeAndFlush(channel, respFrame, Cmd.RPC_RESP);
     }
 
-    //异步模式处理
+    //异步模式处理: 从请求参数中找到，回调目标坐标，通过代理类，将结果发送给目标
+    //note 注意需要提前将回调目标 注册为RPC方法，才能通过RPC过程执行回调
     private static void asyncHandler(Object result, RpcInvokeFrame position, Sender sender, Channel channel) {
         if (position != null) {
             //如果回调的坐标不为空的话
@@ -88,7 +90,7 @@ public class RpcConsumer {
             RemoteInvoke invoke = RemoteInvoke.getInstance(sender, channel);
             //获取代理类
             Object clientApi = invoke.getBean(beanName);
-            //通过反射执行,此处或触发代理类的增强方法，并将数据发送出去
+            //通过反射执行,此处或触发代理类的增强方法，并将数据发送出去  ->真正执行的是代理类的增强方法 @{RpcClientProxyHandler}
             ReflectUtil.invokeMethodByName(clientApi, position.getMethodName(), new Object[]{result});
         }
     }

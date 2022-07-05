@@ -404,4 +404,22 @@ public class RpcClientRegister implements ImportBeanDefinitionRegistrar, Resourc
         return path;
     }
 
+    public static void main(String[] args) {
+        System.out.println( Integer.toHexString(-889275714));
+        System.out.println( Integer.toHexString(0));
+        System.out.println( Integer.toHexString(49));
+        System.out.println( Integer.toHexString(-889275714));
+        System.out.println(Long.toHexString(0x100000000L + 0xcafebabe));
+        ConvertToASCII();
+    }
+
+    public static void ConvertToASCII() {
+        String str = "cafebabe";
+        StringBuilder sb = new StringBuilder();
+        char[] ch = str.toCharArray();
+        for (int i = 0; i < ch.length; i++) {
+            sb.append(Integer.valueOf(ch[i]).intValue()).append("  ");// 加空格
+            System.out.println(sb.toString());
+        }
+    }
 }

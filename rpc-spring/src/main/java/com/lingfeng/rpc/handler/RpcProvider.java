@@ -9,7 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @Auther: wz
  * @Date: 2022/6/20 13:42
- * @Description:
+ * @Description: 对RPC响应结果的异步处理类，
+ * 如果通过seq在等待队列中找到了对应的等待线程，则将设置返回结果，并唤醒等待线程
  */
 @Slf4j
 public class RpcProvider {
